@@ -1,0 +1,46 @@
+---
+title: "DA5020.P3.Group7"
+author: "Thomas Faria, Sairah Shir, Caitlin Kirkpatrick"
+date: "2024-08-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Q1
+
+### Data loading and exploration
+
+### Feature identification
+
+### (OPTIONAL) Feature engineering
+
+## Q2
+
+### Normalization
+
+### Creation of training and test datasets
+
+## Q3
+
+### Build knn-predict() function
+
+## Q4
+
+### Obtain MSE for each k value
+
+### Visualize k vs. MSE
+
+### Determine optimal k value
+
+### Discussion
+
+## Q5
+
+### (OPTIONAL) Visual story telling of a dataset attribute
+
+OR
+
+### (OPTIONAL) Optimize k-nn with training/test % split adjustments
