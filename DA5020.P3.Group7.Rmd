@@ -61,6 +61,23 @@ problems(taxi_data)
 
 ```{r}
 
+# Use sample() to randomly subset
+# Setting seed is required for reproducibility
+
+set.seed(1, sample.kind = "Rejection")
+
+index <- sample(c(1, 2),
+                size = nrow(taxi_data),
+                prob = c(0.75, 0.25),
+                replace = T
+                )
+
+taxi_train <- taxi_data[index==1,]
+head(taxi_train)
+
+taxi_test <- taxi_data[index==2,]
+head(taxi_test)
+
 ```
 
 ## Q3
@@ -70,12 +87,26 @@ problems(taxi_data)
 ```{r}
 
 # Define the knn_predict() function
+# data_train and data_test should be training and test data sets supplied as df or tibble objects
+# regress1, regress2 can be any continuous variables chosen for k-nn modeling (input as strings)
+# Default response is tip_amount (can input as string value of another response)
 
-knn_predict <- function (data_train, data_test, k) {
+knn_predict <- function (data_train, data_test, 
+                         regress1, regress2, 
+                         k,
+                         response = "tip_amount"
+                         ) {
   
-  knn_reg <- knn.reg(data_train, data_test, 
-                     y = data_train$tip_amount, 
-                     k = k)
+  # k-nn regression with tip_amount as the default response variable
+  knn_reg <- knn.reg(select(data_train, 
+                            regress1,
+                            regress2),
+                     select(data_test, 
+                            regress1,
+                            regress2),
+                     y = data_train[[response]], 
+                     k = k
+                     )
   
   # Compute MSE
   mse = mean((data_test$tip_amount - knn_reg$pred)^2)
