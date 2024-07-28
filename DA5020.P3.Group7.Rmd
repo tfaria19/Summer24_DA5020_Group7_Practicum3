@@ -9,31 +9,102 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Load required packages:
+
+```{r, echo = FALSE}
+library(tidyverse)
+library(readr)
+library(class) # support package for FNN (returns a class object)
+library(FNN) # k-nn classification package
+```
+
 ## Q1
 
 ### Data loading and exploration
 
+```{r}
+
+pre_taxi_data <- read_csv("2018_Green_Taxi_Trip_Data-1.csv")
+problems(pre_taxi_data)
+
+# This .csv file requires pre-processing to fix thousands separator commas that are conflicting with .csv format
+
+# There are only a few instances of this error, so we'll simply use a text editor to fix (remove) the commas in these values
+
+taxi_data <- read_csv("2018_Green_Taxi_Trip_Data-1_fixed.csv")
+# Verify that comma errors are handled
+problems(taxi_data)
+
+```
+
 ### Feature identification
 
+```{r}
+
+```
+
 ### (OPTIONAL) Feature engineering
+
+```{r}
+
+```
 
 ## Q2
 
 ### Normalization
 
-### Creation of training and test datasets
+```{r}
+
+```
+
+### Creation of training and test data sets
+
+```{r}
+
+```
 
 ## Q3
 
 ### Build knn-predict() function
 
+```{r}
+
+# Define the knn_predict() function
+
+knn_predict <- function (data_train, data_test, k) {
+  
+  knn_reg <- knn.reg(data_train, data_test, 
+                     y = data_train$tip_amount, 
+                     k = k)
+  
+  # Compute MSE
+  mse = mean((data_test$tip_amount - knn_reg$pred)^2)
+  
+  # Return MSE
+  return(mse)
+  
+}
+```
+
 ## Q4
 
 ### Obtain MSE for each k value
 
+```{r}
+
+```
+
 ### Visualize k vs. MSE
 
+```{r}
+
+```
+
 ### Determine optimal k value
+
+```{r}
+
+```
 
 ### Discussion
 
