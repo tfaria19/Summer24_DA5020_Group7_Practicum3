@@ -54,6 +54,7 @@ problems(taxi_data)
 ### Normalization
 
 ```{r}
+# z score 
 
 ```
 
