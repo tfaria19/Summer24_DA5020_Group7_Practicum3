@@ -123,12 +123,46 @@ knn_predict <- function (data_train, data_test,
 
 ```{r}
 
+loop_output <- tibble(k = numeric(), mse = double())
+
+for (i in 1:20) {
+  
+  mse <- knn_predict(taxi_train, taxi_test,
+                     "trip_distance", "total_amount", i
+                     )
+  
+  loop_output <- add_row(loop_output,
+                         k = i, mse = mse)
+  
+}
+
+print(loop_output)
 ```
 
 ### Visualize k vs. MSE
 
 ```{r}
 
+
+
+ggplot(loop_output, aes(x = k, y = mse)) +
+  geom_line() +
+  geom_point(color = "blue") +
+  labs(title = "k value vs. MSE",
+       x = "k value",
+       y = "MSE") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, 
+                              face = "bold", 
+                              size = 14),
+    axis.title.x = element_text(size = 12), 
+    axis.title.y = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    panel.grid.major = element_line(color = "grey80"), 
+    panel.grid.minor = element_line(color = "grey90") 
+  )
+  
 ```
 
 ### Determine optimal k value
