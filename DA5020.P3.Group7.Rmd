@@ -57,6 +57,7 @@ taxi_data<- dummy_cols(taxi_data,
                    select_columns = "store_and_fwd_flag")
 
 head(taxi_data)
+
 ```
 
 ```{r}
