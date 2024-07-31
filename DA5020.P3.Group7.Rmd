@@ -53,14 +53,11 @@ problems(taxi_data)
 
 ### Encode the data
 ```{r}
-taxi_data<- dummy_cols(taxi_data, 
-                   select_columns = "store_and_fwd_flag")
-
-head(taxi_data)
 
 ```
 
 ```{r}
+
 
 ```
 
@@ -78,7 +75,15 @@ head(taxi_data)
 ### Normalization
 
 ```{r}
-# z score 
+# z-score for continuous variables 
+
+continuous_vars <- c('fare_amount', 'extra', 'mta_tax', 'tip_amount', 'tolls_amount','improvement_surcharge', 'total_amount', 'trip_distance')
+continuous_vars
+
+taxi_data[continuous_vars] <- scale(taxi_data[continuous_vars])
+
+# Display summary of the standardized data
+summary(taxi_data[continuous_vars])
 
 ```
 
