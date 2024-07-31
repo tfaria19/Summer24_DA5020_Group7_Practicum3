@@ -51,6 +51,29 @@ problems(taxi_data)
 
 ## Q2
 
+### Encode the data
+```{r}
+taxi_data<- dummy_cols(taxi_data, 
+                   select_columns = "store_and_fwd_flag")
+
+head(taxi_data)
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+
+### Preprocess the data 
+
+```{r}
+
+```
+
 ### Normalization
 
 ```{r}
