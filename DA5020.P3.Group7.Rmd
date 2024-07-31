@@ -20,21 +20,118 @@ library(FNN) # k-nn classification package
 
 ## Q1
 
-### Data loading and exploration
+### Load & Explore Data
 
-```{r}
-
+```{r loading data}
 pre_taxi_data <- read_csv("2018_Green_Taxi_Trip_Data-1.csv")
 problems(pre_taxi_data)
 
 # This .csv file requires pre-processing to fix thousands separator commas that are conflicting with .csv format
 
-# There are only a few instances of this error, so we'll simply use a text editor to fix (remove) the commas in these values
+# There are only a few instances of this error, a text editor was used to fix (remove) the commas in these values
 
 taxi_data <- read_csv("2018_Green_Taxi_Trip_Data-1_fixed.csv")
+
 # Verify that comma errors are handled
 problems(taxi_data)
+```
 
+```{r initial look}
+# Re-classify some variables and handle NA values
+taxi_data <- taxi_data %>%
+  mutate(
+    VendorID = as.character(VendorID),
+    lpep_pickup_datetime = mdy_hm(lpep_pickup_datetime),
+    lpep_dropoff_datetime = mdy_hm(lpep_dropoff_datetime),
+    RatecodeID = as.character(RatecodeID),
+    payment_type = as.character(payment_type),
+    trip_type = as.character(trip_type)
+  ) %>%
+  select(-ehail_fee) %>%
+  na.omit()
+
+# Confirm variable data types and pre-identify potential predictors for tipping
+str(taxi_data)
+
+# Check summary statistics
+summary(taxi_data)
+```
+
+
+* The ehail_fee column is excluded due to only containing NA values
+* Some variables that were originally classified as numeric are re-assigned as character types due to being categorical in nature
+* Prior to completing any analyses, we can identify erroneous values present in the dataset by examining the minimum and maximum values for some numerical variables:
+  * trip_distance has a maximum value of 140.6 miles, which is likely an outlier given
+  the long travel time
+  * fare_amount has a minimum value of -$183, which is impossible considering this is
+  supposed to represent the cost of a trip
+  * extra has a minimum value of -4.5, which is also impossible given the minimum
+  should be $0.50
+  * mta_tax has a minimum value of -0.5, which is incorrect given this variable should
+  only represent $0.50 tax charges
+  * improvement_surcharge has a minimum value of -0.3, another impossible value as
+  there should only be $0.30 surcharges
+  * tip_amount has a minimum value of -2.72, which is not possible
+  * total_amount has a minimum value of -$183, which is incorrect
+
+```{r}
+# Verify categorical observations match what is depicted in the data dictionary
+unique(taxi_data$VendorID)
+unique(taxi_data$RatecodeID)
+unique(taxi_data$store_and_fwd_flag)
+unique(taxi_data$payment_type)
+unique(taxi_data$trip_type)
+
+# Define function to filter calculated outliers
+filter_outliers <- function(df, var) {
+  df %>%
+    mutate(
+      mean_value = mean(df[[var]]),
+      sd_value = sd(df[[var]])
+    ) %>%
+    filter(
+      df[[var]] < mean_value - 1.5 * sd_value | 
+      df[[var]] > mean_value + 1.5 * sd_value
+    ) %>%
+    select(all_of(var))
+}
+
+# Apply function
+trip_distance_outliers <- filter_outliers(taxi_data, "trip_distance")
+fare_amount_outliers <- filter_outliers(taxi_data, "fare_amount")
+tip_amount_outliers <- filter_outliers(taxi_data, "tip_amount")
+tolls_amount_outliers <- filter_outliers(taxi_data, "tolls_amount")
+total_amount_outliers <- filter_outliers(taxi_data, "total_amount")
+
+# Outliers
+trip_distance_outliers
+fare_amount_outliers
+tip_amount_outliers
+tolls_amount_outliers
+total_amount_outliers
+
+# Define function to remove outliers
+rmv_outliers <- function(df, var) {
+  df %>%
+    mutate(
+      mean_value = mean(df[[var]]),
+      sd_value = sd(df[[var]])
+    ) %>%
+    filter(
+      !(df[[var]] < mean_value - 1.5 * sd_value | 
+      df[[var]] > mean_value + 1.5 * sd_value)
+    )
+}
+
+# Complete dataframe with outliers removed
+clean_taxi <- taxi_data %>%
+  rmv_outliers("trip_distance") %>%
+  rmv_outliers("fare_amount") %>%
+  rmv_outliers("tip_amount") %>%
+  rmv_outliers("tolls_amount") %>%
+  rmv_outliers("total_amount")
+
+clean_taxi
 ```
 
 ### Feature identification
