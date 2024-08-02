@@ -45,16 +45,16 @@ problems(taxi_data)
 # Re-classify some variables and handle NA values
 taxi_data <- taxi_data %>%
   mutate(
-    VendorID = as.factor(VendorID),
+    VendorID = as.numeric(factor(VendorID)),
     lpep_pickup_datetime = mdy_hm(lpep_pickup_datetime),
     lpep_dropoff_datetime = mdy_hm(lpep_dropoff_datetime),
-    RatecodeID = as.factor(RatecodeID),
-    payment_type = as.factor(payment_type),
-    trip_type = as.factor(trip_type),
-    passenger_count = as.factor(passenger_count),
+    RatecodeID = as.numeric(factor(RatecodeID)),
+    payment_type = as.numeric(factor(payment_type)),
+    trip_type = as.numeric(factor(trip_type)),
+    passenger_count = as.numeric(factor(passenger_count)),
     PULocationID = as.numeric(factor(PULocationID)),
     DOLocationID = as.numeric(factor(DOLocationID)),
-    store_and_fwd_flag = as.factor(store_and_fwd_flag)
+    store_and_fwd_flag = as.numeric(factor(store_and_fwd_flag))
   ) %>%
   filter(year(lpep_pickup_datetime) == 2018 & year(lpep_dropoff_datetime) == 2018) %>%
   select(-ehail_fee) %>%
@@ -150,18 +150,37 @@ taxi_clean <- taxi_data %>%
 taxi_clean
 ```
 
-* Outliers will be removed as they are likely not representative of typical behavior from passengers, particulary regarding tipping
+* Outliers will be removed as they are likely not representative of typical behavior from passengers, particularly regarding tipping
+
+```{r boroughs}
+# Load in official borough data corresponding to location IDs from https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
+borough_df <- read.csv("taxi_zone_lookup.csv")
+
+taxi_clean <- taxi_clean %>%
+  left_join(borough_df, by = c("PULocationID" = "LocationID")) %>%
+  rename(PU_Borough = Borough) %>%
+  left_join(borough_df, by = c("DOLocationID" = "LocationID")) %>%
+  rename(DO_Borough = Borough)
+```
+
+* Data provided by the NYC official government site associates pickup and dropoff location IDs with one of the seven boroughs in Manhattan
+* This borough information may be used to "cluster" the taxi zones and simplify analyses without including 200+ individual pickup and dropoff taxi zones
+* If needed, taxi zone(s) can be backtraced from a borough during the downstream analysis
 
 ```{r distributions}
-# Add weekday breakdown to clean_taxi for visuals
+# Add weekday breakdown, ordinal encoding for remaining factor variables
 taxi_clean <- taxi_clean %>%
   mutate(
     pickup_day = as.factor(wday(lpep_pickup_datetime)),
     dropoff_day = as.factor(wday(lpep_dropoff_datetime)),
     mta_tax = as.factor(mta_tax),
     extra = as.factor(extra),
-    improvement_surcharge = as.factor(improvement_surcharge)
-  ) 
+    improvement_surcharge = as.factor(improvement_surcharge),
+    PU_Borough = as.factor(PU_Borough),
+    DO_Borough = as.factor(DO_Borough),
+    tolls_amount = as.factor(tolls_amount)
+  )
+
 # Histograms for numerical variables
 hist_trip <- ggplot(taxi_clean, aes(x = trip_distance)) + geom_histogram()
 hist_fare <- ggplot(taxi_clean, aes(x = fare_amount)) + geom_histogram()
@@ -182,78 +201,64 @@ bar_pass <- ggplot(taxi_clean, aes(x = passenger_count)) + geom_bar()
 bar_mta <- ggplot(taxi_clean, aes(x = mta_tax)) + geom_bar()
 bar_extra <- ggplot(taxi_clean, aes(x = extra)) + geom_bar()
 bar_imp <- ggplot(taxi_clean, aes(x = improvement_surcharge)) + geom_bar()
+bar_pu <- ggplot(taxi_clean, aes(x = PU_Borough)) + geom_bar()
+bar_do <- ggplot(taxi_clean, aes(x = DO_Borough)) + geom_bar()
+bar_toll <- ggplot(taxi_clean, aes(x = tolls_amount)) + geom_bar()
 
-bar_pu <- ggplot(taxi_clean, aes(x = PULocationID)) + geom_bar()
-bar_do <- ggplot(taxi_clean, aes(x = DOLocationID)) + geom_bar()
-
-(bar_pickup_d | bar_dropoff_d | bar_pass) /
+(bar_dropoff_d | bar_pass | bar_extra | bar_toll) /
   (bar_flag | bar_rate | bar_payment | bar_trip) /
-  (bar_imp | bar_mta | bar_extra)
+  (bar_imp | bar_mta | bar_pu | bar_do)
 ```
+```{r}
+# Final summary check with cleaned df
+summary(taxi_clean)
+```
+* In examining the distributions of the continuous variables:
+  * trip_distance has a slight right skew with a median of 1.3 and mean of 1.5
+  * tip_amount is significantly skewed toward 0
+  * fare_amount has a slight right skew with a median of 7.5 and mean of 8
+  * total_amount has a very slight right skew with a median of 9.3 and mean of 9.8
 
-* <describe visual trends>
-
-```{r correlations, INCOMPLETE}
-# Load in official borough data corresponding to location IDs from https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
-borough_df <- read.csv("taxi_zone_lookup.csv")
-
-taxi_clean <- taxi_clean %>%
-  left_join(borough_df, by = c("PULocationID" = "LocationID")) %>%
-  rename(PU_Borough = Borough) %>%
-  left_join(borough_df, by = c("DOLocationID" = "LocationID")) %>%
-  rename(DO_Borough = Borough)
-
+```{r}
+# Convert any factors to integers for correlation matrix
 taxi_clean <- taxi_clean %>%
   mutate(
-    PU_Borough = as.factor(PU_Borough),
-    DO_Borough = as.factor(DO_Borough)
+    VendorID = as.integer(VendorID),
+    store_and_fwd_flag = as.integer(store_and_fwd_flag),
+    RatecodeID = as.integer(RatecodeID),
+    passenger_count = as.integer(passenger_count),
+    extra = as.integer(extra),
+    mta_tax = as.integer(mta_tax),
+    improvement_surcharge = as.integer(improvement_surcharge),
+    payment_type = as.integer(payment_type),
+    trip_type = as.integer(trip_type),
+    PU_Borough = as.integer(PU_Borough),
+    DO_Borough = as.integer(DO_Borough),
+    pickup_day = as.integer(pickup_day),
+    dropoff_day = as.integer(dropoff_day),
+    tolls_amount = as.integer(tolls_amount)
   )
 
-# Check the structure of the resulting dataframe
-str(taxi_clean)
-
-```
-
-```{r}
-# Prepare dummy columns
-taxi_dummy <- dummy_cols(taxi_clean, select_columns = c("pickup_day", "dropoff_day", "passenger_count", "store_and_fwd_flag", 
-                                                        "RatecodeID", "payment_type", "trip_type", "VendorID", "improvement_surcharge",
-                                                        "mta_tax", "extra", "PU_Borough", "DO_Borough"), remove_first_dummy = TRUE)
-
-taxi_num <- taxi_dummy %>%
-  # Omit original columns
-  select(-pickup_day, -dropoff_day, -passenger_count, -store_and_fwd_flag, -VendorID,
-         -RatecodeID, -payment_type, -trip_type, -lpep_pickup_datetime, -lpep_dropoff_datetime,
-         -mta_tax, -extra, -PULocationID, -DOLocationID, -improvement_surcharge, -PU_Borough, -DO_Borough)
-
-str(taxi_num)
-```
-
-```{r}
 # Get correlation matrix
-taxi_cor <- cor(taxi_num, use = "complete.obs")
+taxi_cor <- taxi_clean %>%
+  select(-lpep_pickup_datetime, -lpep_dropoff_datetime, -PULocationID, -DOLocationID, -pickup_day)
+  cor(taxi_cor, use = "complete.obs")
 
-# Can exclude later
 taxi_cor
-```
-
-```{r}
-# Convert correlation matrix to df and omit NA values
-taxi_cor_df <- as.data.frame(as.table(taxi_cor)) %>%
-  na.omit()
-
-# Filter for strong correlations
-significant_cor <- taxi_cor_df %>%
-  filter((abs(Freq) > 0.7) & (abs(Freq) < 1) & Var1 != Var2)
-
-significant_cor
 ```
 
 ### Feature identification
 
-```{r}
-
-```
+* When considering features that potentially affect whether or not a tip is given, the following should be considered about tip_amount:
+  * Most passengers do not tip as revealed in the visuals and summary statistics
+  * When a tip is given, it is under $5
+* The following features appeared to have significant (> 0.70 or < -0.7) correlations with tip_amount based on cor():
+  * 
+* Some features showed little to no correlation but may be kept due to their practical relationship to tip_amount; while cor() may show little relationship, there is no way to completely rule them out:
+  * 
+* Some features can be eliminated entirely due to being completely independent of the passenger; as in, this information is for internal use only for a driver:
+  * store_and_fwd_flag: 
+  * VendorID: 
 
 ### (OPTIONAL) Feature engineering
 
