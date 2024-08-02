@@ -227,15 +227,6 @@ str(taxi_num)
 
 ```
 
-```{r}
-
-
-```
-
-```{r}
-
-```
-
 
 ### Preprocess the data 
 
@@ -259,6 +250,10 @@ summary(taxi_data[continuous_vars])
 ```
 
 ### Creation of training and test data sets
+
+```{r}
+
+```
 
 ```{r}
 
