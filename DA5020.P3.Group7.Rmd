@@ -61,21 +61,16 @@ taxi_data <- taxi_data %>%
 summary(taxi_data)
 ```
 
-* The ehail_fee column is excluded due to only containing NA values
-* Some variables that were originally classified as numeric are re-assigned as character types due to being categorical in nature
-* Prior to completing any analyses, we can identify erroneous values present in the dataset by examining the minimum and maximum values for some numerical variables:
-  * trip_distance has a maximum value of 140.6 miles, which is likely an outlier given
-  the long travel time
-  * fare_amount has a minimum value of -$183, which is impossible considering this is
-  supposed to represent the cost of a trip
-  * extra has a minimum value of -4.5, which is also impossible given the minimum
-  should be $0.50
-  * mta_tax has a minimum value of -0.5, which is incorrect given this variable should
-  only represent $0.50 tax charges
-  * improvement_surcharge has a minimum value of -0.3, another impossible value as
-  there should only be $0.30 surcharges
-  * tip_amount has a minimum value of -2.72, which is not possible
-  * total_amount has a minimum value of -$183, which is incorrect
+-   The ehail_fee column is excluded due to only containing NA values
+-   Some variables that were originally classified as numeric are re-assigned as character types due to being categorical in nature
+-   Prior to completing any analyses, we can identify erroneous values present in the dataset by examining the minimum and maximum values for some numerical variables:
+    -   trip_distance has a maximum value of 140.6 miles, which is likely an outlier given the long travel time
+    -   fare_amount has a minimum value of -\$183, which is impossible considering this is supposed to represent the cost of a trip
+    -   extra has a minimum value of -4.5, which is also impossible given the minimum should be \$0.50
+    -   mta_tax has a minimum value of -0.5, which is incorrect given this variable should only represent \$0.50 tax charges
+    -   improvement_surcharge has a minimum value of -0.3, another impossible value as there should only be \$0.30 surcharges
+    -   tip_amount has a minimum value of -2.72, which is not possible
+    -   total_amount has a minimum value of -\$183, which is incorrect
 
 ```{r outliers}
 # Verify categorical observations match what is depicted in the data dictionary
@@ -147,7 +142,7 @@ taxi_clean <- taxi_data %>%
 taxi_clean
 ```
 
-* Outliers will be removed as they are likely not representative of typical behavior from passengers, particulary regarding tipping
+-   Outliers will be removed as they are likely not representative of typical behavior from passengers, particulary regarding tipping
 
 ```{r distributions}
 # Add weekday breakdown to clean_taxi for visuals
@@ -181,7 +176,8 @@ bar_pass <- ggplot(taxi_clean, aes(x = passenger_count)) + geom_bar()
 (bar_pickup_d | bar_dropoff_d | bar_pass) /
   (bar_flag | bar_rate | bar_payment | bar_trip)
 ```
-* <describe visual trends>
+
+-   <describe visual trends>
 
 ```{r correlations, INCOMPLETE}
 # Convert characters to factors
@@ -223,12 +219,25 @@ str(taxi_num)
 ## Q2
 
 ### Encode the data
+
 ```{r}
 
 ```
 
+<<<<<<< HEAD
 
 ### Preprocess the data 
+
+```{r}
+
+
+```
+
+```{r}
+
+```
+
+### Preprocess the data
 
 ```{r}
 
@@ -263,18 +272,24 @@ summary(taxi_data[continuous_vars])
 set.seed(1, sample.kind = "Rejection")
 
 index <- sample(c(1, 2),
-                size = nrow(taxi_data),
+                size = nrow(taxi_clean),
                 prob = c(0.75, 0.25),
                 replace = T
                 )
 
-taxi_train <- taxi_data[index==1,]
+taxi_train <- taxi_clean[index==1,]
 head(taxi_train)
 
-taxi_test <- taxi_data[index==2,]
+taxi_test <- taxi_clean[index==2,]
 head(taxi_test)
 
 ```
+
+-   A 75/25 % split for training/test data was used in this analysis.
+
+    -   The 75/25 split is a pragmatic starting point for exploratory machine learning analysis; 75% training data is generally thought to be large enough to generalize the data patterns of a given set, while 25% test data is typically a good portion for evaluating performance - not so small as to not be representative, while leaving a large enough share of data for training.
+
+    -   Different distributions of training/test may produce more accurate models, an optimization that can be performed after observing initial performance.
 
 ## Q3
 
@@ -311,6 +326,7 @@ knn_predict <- function (data_train, data_test,
   return(mse)
   
 }
+
 ```
 
 ## Q4
@@ -319,12 +335,15 @@ knn_predict <- function (data_train, data_test,
 
 ```{r}
 
+regress1 <- "trip_distance"
+regress2 <- "total_amt"
+
 loop_output <- tibble(k = numeric(), mse = double())
 
-for (i in 1:20) {
+for (i in 1:25) {
   
   mse <- knn_predict(taxi_train, taxi_test,
-                     "trip_distance", "total_amount", i
+                     regress1, regress2, i
                      )
   
   loop_output <- add_row(loop_output,
@@ -333,13 +352,12 @@ for (i in 1:20) {
 }
 
 print(loop_output)
+
 ```
 
 ### Visualize k vs. MSE
 
 ```{r}
-
-
 
 ggplot(loop_output, aes(x = k, y = mse)) +
   geom_line() +
@@ -364,6 +382,9 @@ ggplot(loop_output, aes(x = k, y = mse)) +
 ### Determine optimal k value
 
 ```{r}
+
+# Optimal k value is the k at which MSE is lowest
+print(loop_output[which.min(loop_output$mse),])
 
 ```
 
