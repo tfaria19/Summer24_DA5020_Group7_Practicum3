@@ -447,27 +447,38 @@ print(loop_output[which.min(loop_output$mse),])
 
 ### (OPTIONAL) Visual story telling of a dataset attribute
 
+* the x axis represents the tip amount and the y axis represents the density, meaning how often a tip amount occurs 
+* the higher peaks means that tip amount was given more frequently 
+* the area under the curve highlights that the tip amount were more common in that range 
+* facet wrap so the different boroughs could be shown and compared 
+* from the graphs we find that across all boroughs for pickup and drop off that tipping was not done seeing as the peaks in all the graphs are up at zero. 
+* 
 
 ```{r}
+
+taxi_clean$PU_Borough <- factor(taxi_clean$PU_Borough, 
+                                 levels = c("1", "2", "3", "4", "5"),
+                                 labels = c("EWR", "Queens", "Bronx", "Manhattan", "Staten Island"))
+
 # Density plot faceted by pickup borough
 ggplot(taxi_clean, aes(x = tip_amount, fill = PU_Borough)) +
   geom_density(alpha = 0.5) +
   labs(title = "Tip Amount Distribution by Pickup Borough", x = "Tip Amount ($)", y = "Density") +
   theme_minimal() +
-  facet_wrap(~ PU_Borough, scales = "free_y")
+  facet_wrap(~ PU_Borough, scales = "fixed")
+
+taxi_clean$DO_Borough <- factor(taxi_clean$DO_Borough, 
+                                 levels = c("1", "2", "3", "4", "5"),
+                                 labels = c("EWR", "Queens", "Bronx", "Manhattan", "Staten Island"))
 
 # Density plot faceted by dropoff borough
 ggplot(taxi_clean, aes(x = tip_amount, fill = DO_Borough)) +
   geom_density(alpha = 0.5) +
   labs(title = "Tip Amount Distribution by Drop off Borough", x = "Tip Amount ($)", y = "Density") +
   theme_minimal() +
-  facet_wrap(~ DO_Borough, scales = "free_y")
+  facet_wrap(~ DO_Borough, scales = "fixed")
+
 ```
-* the x axis represents the tip amount and the y axis represents the density, meaning how often a tip amount occurs 
-* the higher peaks means that tip amount was given more frequently 
-* the area under the curve highlights that the tip amount were more common in that range 
-* facet wrap so the different boroughs could be shown and compared 
-* from the graphs we find that across all boroughs for pickup and drop off that tipping was not done seeing as the peaks in all the graphs are up around zero.  
 
 OR
 
