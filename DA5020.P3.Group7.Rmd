@@ -67,14 +67,11 @@ summary(taxi_data)
 * The ehail_fee column is excluded due to only containing NA values
 * Some variables that were originally classified as numeric are re-assigned as character types due to being categorical in nature
 * Prior to completing any analyses, we can identify erroneous values present in the dataset by examining the minimum and maximum values for some numerical variables:
-  * trip_distance has a maximum value of 140.6 miles, which is likely an outlier given
-  the long travel time
-  * fare_amount has a minimum value of -$183, which is impossible considering this is
-  supposed to represent the cost of a trip
+  * trip_distance has a maximum value of 140.6 miles, which is likely an outlier given the long travel time
+  * fare_amount has a minimum value of -$183, which is impossible considering this is supposed to represent the cost of a trip
   * extra has a minimum value of -4.5, which is also impossible given the minimum
   should be $0.50
-  * mta_tax has a minimum value of -0.5, which is incorrect given this variable should
-  only represent $0.50 tax charges
+  * mta_tax has a minimum value of -0.5, which is incorrect given this variable should only represent $0.50 tax charges
   * improvement_surcharge has a minimum value of -0.3, another impossible value as
   there should only be $0.30 surcharges
   * tip_amount has a minimum value of -2.72, which is not possible
@@ -155,12 +152,14 @@ taxi_clean
 ```{r boroughs}
 # Load in official borough data corresponding to location IDs from https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
 borough_df <- read.csv("taxi_zone_lookup.csv")
+borough_df
 
 taxi_clean <- taxi_clean %>%
   left_join(borough_df, by = c("PULocationID" = "LocationID")) %>%
   rename(PU_Borough = Borough) %>%
   left_join(borough_df, by = c("DOLocationID" = "LocationID")) %>%
   rename(DO_Borough = Borough)
+taxi_clean
 ```
 
 * Data provided by the NYC official government site associates pickup and dropoff location IDs with one of the seven boroughs in Manhattan
@@ -296,23 +295,27 @@ taxi_cor
 ### Normalization
 
 ```{r}
-# z-score for continuous variables 
+# min-max normalization for continuous variables 
 
 continuous_vars <- c('fare_amount', 'extra', 'mta_tax', 'tip_amount', 'tolls_amount','improvement_surcharge', 'total_amount', 'trip_distance')
 continuous_vars
 
-taxi_data[continuous_vars] <- scale(taxi_data[continuous_vars])
+min_max_normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
 
-# Display summary of the standardized data
-summary(taxi_data[continuous_vars])
+# Apply min-max normalization to the continuous variables
+taxi_clean[continuous_vars] <- lapply(taxi_clean[continuous_vars], min_max_normalize)
+
+# Display summary of the normalized data
+summary(taxi_clean[continuous_vars])
 
 ```
+* The min-max brings the values of a feature within a specific range, from between 0 to 1 
+* Using min-max normalization will make sure we have the exact same scale 
+* Min-max normalization is sensitive to outliers, however, since we decided to remove the outliers from our dataset we used max-min normalization
 
 ### Creation of training and test data sets
-
-```{r}
-
-```
 
 ```{r}
 
@@ -443,6 +446,28 @@ print(loop_output[which.min(loop_output$mse),])
 ## Q5
 
 ### (OPTIONAL) Visual story telling of a dataset attribute
+
+
+```{r}
+# Density plot faceted by pickup borough
+ggplot(taxi_clean, aes(x = tip_amount, fill = PU_Borough)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Tip Amount Distribution by Pickup Borough", x = "Tip Amount ($)", y = "Density") +
+  theme_minimal() +
+  facet_wrap(~ PU_Borough, scales = "free_y")
+
+# Density plot faceted by dropoff borough
+ggplot(taxi_clean, aes(x = tip_amount, fill = DO_Borough)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Tip Amount Distribution by Drop off Borough", x = "Tip Amount ($)", y = "Density") +
+  theme_minimal() +
+  facet_wrap(~ DO_Borough, scales = "free_y")
+```
+* the x axis represents the tip amount and the y axis represents the density, meaning how often a tip amount occurs 
+* the higher peaks means that tip amount was given more frequently 
+* the area under the curve highlights that the tip amount were more common in that range 
+* facet wrap so the different boroughs could be shown and compared 
+* from the graphs we find that across all boroughs for pickup and drop off that tipping was not done seeing as the peaks in all the graphs are up around zero.  
 
 OR
 
