@@ -15,15 +15,13 @@ Load required packages:
 library(tidyverse)
 library(lubridate)
 library(readr)
-library(outliers)
 library(psych)
-library(fastDummies)
 library(patchwork)
 library(class) # support package for FNN (returns a class object)
 library(FNN) # k-nn classification package
 ```
 
-## Q1
+## Q1 + Q2
 
 ### Load & Explore Data
 
@@ -162,6 +160,8 @@ taxi_clean <- taxi_clean %>%
 -   This borough information may be used to "cluster" the taxi zones and simplify analyses without including 200+ individual pickup and dropoff taxi zones
 -   If needed, taxi zone(s) can be backtraced from a borough during the downstream analysis
 
+### Distribution
+
 ```{r distributions}
 # Add weekday breakdown, ordinal encoding for remaining factor variables
 taxi_clean <- taxi_clean %>%
@@ -202,7 +202,8 @@ bar_toll <- ggplot(taxi_clean, aes(x = tolls_amount)) + geom_bar()
 
 (bar_dropoff_d | bar_pass | bar_extra | bar_toll) /
   (bar_flag | bar_rate | bar_payment | bar_trip) /
-  (bar_imp | bar_mta | bar_pu | bar_do)
+  (bar_imp | bar_mta) /
+  (bar_pu | bar_do)
 ```
 
 ```{r}
@@ -215,6 +216,8 @@ summary(taxi_clean)
     -   tip_amount is significantly skewed toward 0
     -   fare_amount has a slight right skew with a median of 7.5 and mean of 8
     -   total_amount has a very slight right skew with a median of 9.3 and mean of 9.8
+
+### Encoding and Correlation Matrix Investigation
 
 ```{r}
 # Convert any factors to integers for correlation matrix
@@ -249,46 +252,24 @@ cor(taxi_cor, use = "complete.obs")
 -   When considering features that potentially affect whether or not a tip is given, the following should be considered about tip_amount:
     -   Most passengers do not tip as revealed in the visuals and summary statistics
     -   When a tip is given, it is under \$5
--   The following features appeared to have significant (\> 0.70 or \< -0.7) correlations with tip_amount based on cor():
-    -   
+-   payment_type appeared to have significant (\> 0.70 or \< -0.7) correlations with tip_amount based on cor()
 -   Some features showed little to no correlation but may be kept due to their practical relationship to tip_amount; while cor() may show little relationship, there is no way to completely rule them out:
-    -   
+    -   RatecodeID
+    -   passenger_count
+    -   trip_distance
+    -   fare_amount
+    -   mta_tax
+    -   improvement_surcharge
+    -   extra
+    -   tolls_amount
+    -   total_amount
+    -   trip_type
+    -  PU_Borough
+    -  DO_Borough
+    -  dropoff_day
 -   Some features can be eliminated entirely due to being completely independent of the passenger; as in, this information is for internal use only for a driver:
-    -   store_and_fwd_flag:
-    -   VendorID:
-
-### (OPTIONAL) Feature engineering
-
-```{r}
-
-```
-
-## Q2
-
-### Encode the data
-
-```{r}
-
-```
-
-\<\<\<\<\<\<\< HEAD
-
-### Preprocess the data
-
-```{r}
-
-
-```
-
-```{r}
-
-```
-
-### Preprocess the data
-
-```{r}
-
-```
+    -   store_and_fwd_flag: Trip record was held in vehicle
+    -   VendorID: Record provider
 
 ### Normalization
 
@@ -309,7 +290,7 @@ summary(taxi_clean[continuous_vars])
 
 ```
 
--   The min-max brings the values of a feature within a specific range, from between 0 to 1, with every minimum value becoming 0 and maximum becoming 1, all other values become a number between 0 to 1 
+-   The min-max brings the values of a feature within a specific range, from between 0 to 1, with every minimum value becoming 0 and maximum becoming 1, all other values become a number between 0 to 1
 -   Using min-max normalization will make sure we have the exact same scale
 -   Min-max normalization is sensitive to outliers, however, since we decided to remove the outliers from our dataset we used max-min normalization
 
@@ -344,7 +325,7 @@ head(taxi_test)
 
 ## Q3
 
-### Build knn-predict() function
+### Build knn_predict() function
 
 ```{r}
 
@@ -443,18 +424,18 @@ print(loop_output[which.min(loop_output$mse),])
 
 ## Q5
 
-### (OPTIONAL) Visual story telling of a dataset attribute
+### Visual story telling of a dataset attribute
 
--   the x axis represents the tip amount and the y axis represents the density, meaning how often a tip amount occurs
--   the higher peaks means that tip amount was given more frequently
--   the area under the curve highlights that the tip amount were more common in that range
--   facet wrap so the different boroughs could be shown and compared
--   from the graphs we find that across all boroughs for pickup and drop off that tipping was not done seeing as the peaks in all the     graphs are up at zero.
+-   The x-axis represents the tip amount and the y-axis represents the density, meaning how often a tip amount occurs
+-   The higher peaks means that tip amount was given more frequently
+-   The area under the curve highlights that the tip amount were more common in that range
+-   Facet wrap so the different boroughs could be shown and compared
+-   From the graphs we find that across all boroughs for pickup and drop off that tipping was not done seeing as the peaks in all the graphs are up at zero.
 
 ```{r}
 # Visualization of an informative story regarding tip amount and boroughs 
 
-# naming the boroughs with the appropriate name 
+# Naming the boroughs with the appropriate name 
 taxi_clean$PU_Borough <- factor(taxi_clean$PU_Borough, 
                                  levels = c("1", "2", "3", "4", "5"),
                                  labels = c("EWR", "Queens", "Bronx", "Manhattan", "Staten Island"))
@@ -479,14 +460,10 @@ ggplot(taxi_clean, aes(x = tip_amount, fill = DO_Borough)) +
   facet_wrap(~ DO_Borough, scales = "fixed")
 
 ```
-- Pickup Boroughs 
-  - Based on the graphs we can see that the pickups at EWR or Newark Airport and Queens had the most tip amount. We can see that from   the highlighted region under the curves which has a higher density than the other boroughs. 
-  - The borough with the least tip amount was Staten Island, but it was the borough with with the most amount of people being picked     up from  
-  
-- Drop off Boroughs
-  - Staten Island, Queens, and Bronx were where the most tip amounts were given during drop off. 
-  - EWR and Manhattan were where the most drop offs occured, however, it was also where the least amount of tips were given. 
-  
-OR
 
-### (OPTIONAL) Optimize k-nn with training/test % split adjustments
+-   Pickup Boroughs
+    -   Based on the graphs we can see that the pickups at EWR or Newark Airport and Queens had the most tip amount. We can see that from the highlighted region under the curves which has a higher density than the other boroughs.
+    -   The borough with the least tip amount was Staten Island, but it was the borough with with the most amount of people being picked up from
+-   Drop off Boroughs
+    -   Staten Island, Queens, and Bronx were where the most tip amounts were given during drop off.
+    -   EWR and Manhattan were where the most drop offs occured, however, it was also where the least amount of tips were given.
