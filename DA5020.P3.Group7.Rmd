@@ -294,7 +294,7 @@ cor(taxi_cor, use = "complete.obs")
 
 ```{r}
 # Min-max normalization for continuous variables 
-continuous_vars <- c('fare_amount', 'extra', 'mta_tax', 'tip_amount', 'tolls_amount','improvement_surcharge', 'total_amount', 'trip_distance')
+continuous_vars <- c('fare_amount', 'extra', 'mta_tax', 'tip_amount', 'tolls_amount','improvement_surcharge', 'total_amount', 'trip_distance', 'VendorID', 'RatecodeID', 'payment_type', 'trip_type', 'store_and_fwd_flag')
 continuous_vars
 
 # Make a function for the min-max 
@@ -306,7 +306,6 @@ taxi_clean[continuous_vars] <- lapply(taxi_clean[continuous_vars], min_max_norma
 
 # Summary of the normalized data
 summary(taxi_clean[continuous_vars])
-
 
 ```
 
