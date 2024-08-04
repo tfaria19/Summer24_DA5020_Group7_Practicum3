@@ -64,18 +64,16 @@ taxi_data <- taxi_data %>%
 summary(taxi_data)
 ```
 
-* The ehail_fee column is excluded due to only containing NA values
-* Some variables that were originally classified as numeric are re-assigned as character types due to being categorical in nature
-* Prior to completing any analyses, we can identify erroneous values present in the dataset by examining the minimum and maximum values for some numerical variables:
-  * trip_distance has a maximum value of 140.6 miles, which is likely an outlier given the long travel time
-  * fare_amount has a minimum value of -$183, which is impossible considering this is supposed to represent the cost of a trip
-  * extra has a minimum value of -4.5, which is also impossible given the minimum
-  should be $0.50
-  * mta_tax has a minimum value of -0.5, which is incorrect given this variable should only represent $0.50 tax charges
-  * improvement_surcharge has a minimum value of -0.3, another impossible value as
-  there should only be $0.30 surcharges
-  * tip_amount has a minimum value of -2.72, which is not possible
-  * total_amount has a minimum value of -$183, which is incorrect
+-   The ehail_fee column is excluded due to only containing NA values
+-   Some variables that were originally classified as numeric are re-assigned as character types due to being categorical in nature
+-   Prior to completing any analyses, we can identify erroneous values present in the dataset by examining the minimum and maximum values for some numerical variables:
+    -   trip_distance has a maximum value of 140.6 miles, which is likely an outlier given the long travel time
+    -   fare_amount has a minimum value of -\$183, which is impossible considering this is supposed to represent the cost of a trip
+    -   extra has a minimum value of -4.5, which is also impossible given the minimum should be \$0.50
+    -   mta_tax has a minimum value of -0.5, which is incorrect given this variable should only represent \$0.50 tax charges
+    -   improvement_surcharge has a minimum value of -0.3, another impossible value as there should only be \$0.30 surcharges
+    -   tip_amount has a minimum value of -2.72, which is not possible
+    -   total_amount has a minimum value of -\$183, which is incorrect
 
 ```{r outliers}
 # Verify categorical observations match what is depicted in the data dictionary
@@ -107,11 +105,11 @@ tolls_amount_outliers <- filter_outliers(taxi_data, "tolls_amount")
 total_amount_outliers <- filter_outliers(taxi_data, "total_amount")
 
 # Outliers
-trip_distance_outliers
-fare_amount_outliers
-tip_amount_outliers
-tolls_amount_outliers
-total_amount_outliers
+glimpse(trip_distance_outliers)
+glimpse(fare_amount_outliers)
+glimpse(tip_amount_outliers)
+glimpse(tolls_amount_outliers)
+glimpse(total_amount_outliers)
 
 # Define function to remove outliers
 rmv_outliers <- function(df, var) {
@@ -144,27 +142,25 @@ taxi_clean <- taxi_data %>%
   # Discard previous stat columns
   select(-mean_value, -sd_value)
 
-taxi_clean
 ```
 
-* Outliers will be removed as they are likely not representative of typical behavior from passengers, particularly regarding tipping
+-   Outliers will be removed as they are likely not representative of typical behavior from passengers, particularly regarding tipping
 
 ```{r boroughs}
 # Load in official borough data corresponding to location IDs from https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
 borough_df <- read.csv("taxi_zone_lookup.csv")
-borough_df
 
 taxi_clean <- taxi_clean %>%
   left_join(borough_df, by = c("PULocationID" = "LocationID")) %>%
   rename(PU_Borough = Borough) %>%
   left_join(borough_df, by = c("DOLocationID" = "LocationID")) %>%
   rename(DO_Borough = Borough)
-taxi_clean
+
 ```
 
-* Data provided by the NYC official government site associates pickup and dropoff location IDs with one of the seven boroughs in Manhattan
-* This borough information may be used to "cluster" the taxi zones and simplify analyses without including 200+ individual pickup and dropoff taxi zones
-* If needed, taxi zone(s) can be backtraced from a borough during the downstream analysis
+-   Data provided by the NYC official government site associates pickup and dropoff location IDs with one of the seven boroughs in Manhattan
+-   This borough information may be used to "cluster" the taxi zones and simplify analyses without including 200+ individual pickup and dropoff taxi zones
+-   If needed, taxi zone(s) can be backtraced from a borough during the downstream analysis
 
 ```{r distributions}
 # Add weekday breakdown, ordinal encoding for remaining factor variables
@@ -208,15 +204,17 @@ bar_toll <- ggplot(taxi_clean, aes(x = tolls_amount)) + geom_bar()
   (bar_flag | bar_rate | bar_payment | bar_trip) /
   (bar_imp | bar_mta | bar_pu | bar_do)
 ```
+
 ```{r}
 # Final summary check with cleaned df
 summary(taxi_clean)
 ```
-* In examining the distributions of the continuous variables:
-  * trip_distance has a slight right skew with a median of 1.3 and mean of 1.5
-  * tip_amount is significantly skewed toward 0
-  * fare_amount has a slight right skew with a median of 7.5 and mean of 8
-  * total_amount has a very slight right skew with a median of 9.3 and mean of 9.8
+
+-   In examining the distributions of the continuous variables:
+    -   trip_distance has a slight right skew with a median of 1.3 and mean of 1.5
+    -   tip_amount is significantly skewed toward 0
+    -   fare_amount has a slight right skew with a median of 7.5 and mean of 8
+    -   total_amount has a very slight right skew with a median of 9.3 and mean of 9.8
 
 ```{r}
 # Convert any factors to integers for correlation matrix
@@ -241,23 +239,23 @@ taxi_clean <- taxi_clean %>%
 # Get correlation matrix
 taxi_cor <- taxi_clean %>%
   select(-lpep_pickup_datetime, -lpep_dropoff_datetime, -PULocationID, -DOLocationID, -pickup_day)
-  cor(taxi_cor, use = "complete.obs")
 
-taxi_cor
+cor(taxi_cor, use = "complete.obs")
+
 ```
 
 ### Feature identification
 
-* When considering features that potentially affect whether or not a tip is given, the following should be considered about tip_amount:
-  * Most passengers do not tip as revealed in the visuals and summary statistics
-  * When a tip is given, it is under $5
-* The following features appeared to have significant (> 0.70 or < -0.7) correlations with tip_amount based on cor():
-  * 
-* Some features showed little to no correlation but may be kept due to their practical relationship to tip_amount; while cor() may show little relationship, there is no way to completely rule them out:
-  * 
-* Some features can be eliminated entirely due to being completely independent of the passenger; as in, this information is for internal use only for a driver:
-  * store_and_fwd_flag: 
-  * VendorID: 
+-   When considering features that potentially affect whether or not a tip is given, the following should be considered about tip_amount:
+    -   Most passengers do not tip as revealed in the visuals and summary statistics
+    -   When a tip is given, it is under \$5
+-   The following features appeared to have significant (\> 0.70 or \< -0.7) correlations with tip_amount based on cor():
+    -   
+-   Some features showed little to no correlation but may be kept due to their practical relationship to tip_amount; while cor() may show little relationship, there is no way to completely rule them out:
+    -   
+-   Some features can be eliminated entirely due to being completely independent of the passenger; as in, this information is for internal use only for a driver:
+    -   store_and_fwd_flag:
+    -   VendorID:
 
 ### (OPTIONAL) Feature engineering
 
@@ -273,9 +271,9 @@ taxi_cor
 
 ```
 
-<<<<<<< HEAD
+\<\<\<\<\<\<\< HEAD
 
-### Preprocess the data 
+### Preprocess the data
 
 ```{r}
 
@@ -311,9 +309,10 @@ taxi_clean[continuous_vars] <- lapply(taxi_clean[continuous_vars], min_max_norma
 summary(taxi_clean[continuous_vars])
 
 ```
-* The min-max brings the values of a feature within a specific range, from between 0 to 1 
-* Using min-max normalization will make sure we have the exact same scale 
-* Min-max normalization is sensitive to outliers, however, since we decided to remove the outliers from our dataset we used max-min normalization
+
+-   The min-max brings the values of a feature within a specific range, from between 0 to 1
+-   Using min-max normalization will make sure we have the exact same scale
+-   Min-max normalization is sensitive to outliers, however, since we decided to remove the outliers from our dataset we used max-min normalization
 
 ### Creation of training and test data sets
 
@@ -389,7 +388,7 @@ knn_predict <- function (data_train, data_test,
 ```{r}
 
 regress1 <- "trip_distance"
-regress2 <- "total_amt"
+regress2 <- "total_amount"
 
 loop_output <- tibble(k = numeric(), mse = double())
 
@@ -447,12 +446,12 @@ print(loop_output[which.min(loop_output$mse),])
 
 ### (OPTIONAL) Visual story telling of a dataset attribute
 
-* the x axis represents the tip amount and the y axis represents the density, meaning how often a tip amount occurs 
-* the higher peaks means that tip amount was given more frequently 
-* the area under the curve highlights that the tip amount were more common in that range 
-* facet wrap so the different boroughs could be shown and compared 
-* from the graphs we find that across all boroughs for pickup and drop off that tipping was not done seeing as the peaks in all the graphs are up at zero. 
-* 
+-   the x axis represents the tip amount and the y axis represents the density, meaning how often a tip amount occurs
+-   the higher peaks means that tip amount was given more frequently
+-   the area under the curve highlights that the tip amount were more common in that range
+-   facet wrap so the different boroughs could be shown and compared
+-   from the graphs we find that across all boroughs for pickup and drop off that tipping was not done seeing as the peaks in all the graphs are up at zero.
+-   
 
 ```{r}
 
