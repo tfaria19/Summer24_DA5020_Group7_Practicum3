@@ -293,24 +293,24 @@ cor(taxi_cor, use = "complete.obs")
 ### Normalization
 
 ```{r}
-# min-max normalization for continuous variables 
-
+# Min-max normalization for continuous variables 
 continuous_vars <- c('fare_amount', 'extra', 'mta_tax', 'tip_amount', 'tolls_amount','improvement_surcharge', 'total_amount', 'trip_distance')
 continuous_vars
 
+# Make a function for the min-max 
 min_max_normalize <- function(x) {
-  return ((x - min(x)) / (max(x) - min(x)))
-}
+  return ((x - min(x)) / (max(x) - min(x)))}
 
 # Apply min-max normalization to the continuous variables
 taxi_clean[continuous_vars] <- lapply(taxi_clean[continuous_vars], min_max_normalize)
 
-# Display summary of the normalized data
+# Summary of the normalized data
 summary(taxi_clean[continuous_vars])
+
 
 ```
 
--   The min-max brings the values of a feature within a specific range, from between 0 to 1
+-   The min-max brings the values of a feature within a specific range, from between 0 to 1, with every minimum value becoming 0 and maximum becoming 1, all other values become a number between 0 to 1 
 -   Using min-max normalization will make sure we have the exact same scale
 -   Min-max normalization is sensitive to outliers, however, since we decided to remove the outliers from our dataset we used max-min normalization
 
@@ -450,11 +450,12 @@ print(loop_output[which.min(loop_output$mse),])
 -   the higher peaks means that tip amount was given more frequently
 -   the area under the curve highlights that the tip amount were more common in that range
 -   facet wrap so the different boroughs could be shown and compared
--   from the graphs we find that across all boroughs for pickup and drop off that tipping was not done seeing as the peaks in all the graphs are up at zero.
--   
+-   from the graphs we find that across all boroughs for pickup and drop off that tipping was not done seeing as the peaks in all the     graphs are up at zero.
 
 ```{r}
+# Visualization of an informative story regarding tip amount and boroughs 
 
+# naming the boroughs with the appropriate name 
 taxi_clean$PU_Borough <- factor(taxi_clean$PU_Borough, 
                                  levels = c("1", "2", "3", "4", "5"),
                                  labels = c("EWR", "Queens", "Bronx", "Manhattan", "Staten Island"))
@@ -466,11 +467,12 @@ ggplot(taxi_clean, aes(x = tip_amount, fill = PU_Borough)) +
   theme_minimal() +
   facet_wrap(~ PU_Borough, scales = "fixed")
 
+# naming the boroughs with the appropriate name 
 taxi_clean$DO_Borough <- factor(taxi_clean$DO_Borough, 
                                  levels = c("1", "2", "3", "4", "5"),
                                  labels = c("EWR", "Queens", "Bronx", "Manhattan", "Staten Island"))
 
-# Density plot faceted by dropoff borough
+# Density plot faceted by drop off borough
 ggplot(taxi_clean, aes(x = tip_amount, fill = DO_Borough)) +
   geom_density(alpha = 0.5) +
   labs(title = "Tip Amount Distribution by Drop off Borough", x = "Tip Amount ($)", y = "Density") +
@@ -478,7 +480,14 @@ ggplot(taxi_clean, aes(x = tip_amount, fill = DO_Borough)) +
   facet_wrap(~ DO_Borough, scales = "fixed")
 
 ```
-
+- Pickup Boroughs 
+  - Based on the graphs we can see that the pickups at EWR or Newark Airport and Queens had the most tip amount. We can see that from   the highlighted region under the curves which has a higher density than the other boroughs. 
+  - The borough with the least tip amount was Staten Island, but it was the borough with with the most amount of people being picked     up from  
+  
+- Drop off Boroughs
+  - Staten Island, Queens, and Bronx were where the most tip amounts were given during drop off. 
+  - EWR and Manhattan were where the most drop offs occured, however, it was also where the least amount of tips were given. 
+  
 OR
 
 ### (OPTIONAL) Optimize k-nn with training/test % split adjustments
