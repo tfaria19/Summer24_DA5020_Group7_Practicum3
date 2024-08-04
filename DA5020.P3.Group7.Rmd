@@ -15,9 +15,7 @@ Load required packages:
 library(tidyverse)
 library(lubridate)
 library(readr)
-library(outliers)
 library(psych)
-library(fastDummies)
 library(patchwork)
 library(class) # support package for FNN (returns a class object)
 library(FNN) # k-nn classification package
@@ -204,7 +202,8 @@ bar_toll <- ggplot(taxi_clean, aes(x = tolls_amount)) + geom_bar()
 
 (bar_dropoff_d | bar_pass | bar_extra | bar_toll) /
   (bar_flag | bar_rate | bar_payment | bar_trip) /
-  (bar_imp | bar_mta | bar_pu | bar_do)
+  (bar_imp | bar_mta) /
+  (bar_pu | bar_do)
 ```
 
 ```{r}
@@ -253,12 +252,24 @@ cor(taxi_cor, use = "complete.obs")
 -   When considering features that potentially affect whether or not a tip is given, the following should be considered about tip_amount:
     -   Most passengers do not tip as revealed in the visuals and summary statistics
     -   When a tip is given, it is under \$5
--   The following features appeared to have significant (\> 0.70 or \< -0.7) correlations with tip_amount based on cor():
-    -   
+-   payment_type appeared to have significant (\> 0.70 or \< -0.7) correlations with tip_amount based on cor()
 -   Some features showed little to no correlation but may be kept due to their practical relationship to tip_amount; while cor() may show little relationship, there is no way to completely rule them out:
+    -   RatecodeID
+    -   passenger_count
+    -   trip_distance
+    -   fare_amount
+    -   mta_tax
+    -   improvement_surcharge
+    -   extra
+    -   tolls_amount
+    -   total_amount
+    -   trip_type
+    -  PU_Borough
+    -  DO_Borough
+    -  dropoff_day
 -   Some features can be eliminated entirely due to being completely independent of the passenger; as in, this information is for internal use only for a driver:
-    -   store_and_fwd_flag:
-    -   VendorID:
+    -   store_and_fwd_flag: Trip record was held in vehicle
+    -   VendorID: Record provider
 
 ### Normalization
 
